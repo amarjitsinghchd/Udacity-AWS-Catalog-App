@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "header.html" %}
+	<div class = "row justify-content-sm-\enter" >
+		<h1>Project Catalog</h1>
+	</div>
+
+
+	<!-- Side navigation -->
+	<div class=".navbar-fixed-left">
+		<div class = "border-right">
+		<div>
+			{% for icat in catalogs %}
+				<a class = "hover" href= "{{url_for('catalog_select', catalog_id = icat.id)}}" > {{ icat.name }}</a>
+				<br>
+			{% endfor %}
+			{% if user_logged %}
+			<br>
+			<a href="{{url_for('add_catalog') }}">
+				Add New Catalog
+			</a>
+			<br>
+			<a href="{{url_for('delete_catalogmenu') }}">
+				Edit/Delete Catalog
+			</a>
+
+			{% endif %}
+		</div>
+
+		</div>
+
+
+</div>
+
+	<!-- Page content -->
+	<div class="main">
+
+
+
+		<div class = 'pane'>
+			<div class = 'header'>
+				<h1>{{ active_catalog[0].name }}</h1>
+				{% if user_edit %}
+				<a href="{{url_for('add_item', catalog_id = active_catalog[0].id) }}">
+					Add Item
+				</a>
+				{% endif %}
+			</div>
+		</div>
+
+<!-- Adapted from demo project in class. Flashed messages -->
+		<div class = 'flash'>
+			{% with messages = get_flashed_messages() %}
+		      {% if messages %}
+
+		        <ul>
+		        {% for message in messages %}
+		            <li> <strong> {{ message }} </strong> </li>
+		        {% endfor %}
+		        </ul>
+		        {% endif %}
+		    {% endwith %}
+		</div>
+
+	<hr>
+
+	{% for i in items %}
+    <div class = 'row'>
+	    <div class = 'col-4'>
+				<h3 class ='name'>{{i.name}}</h3>
+			{% if user_edit %}
+			<a href="{{ url_for('delete_item', catalog_id = i.catalog_id, item_id = i.id) }}">
+				Delete
+			</a>
+			<a href="{{ url_for('edit_item', catalog_id = i.catalog_id, item_id = i.id) }}">
+				Edit
+			</a>
+			{% endif %}
+		</div>
+
+		<div class = 'col-4'>
+
+		</div>
+	</div>
+
+	<div class = 'description'>
+		<p>{{i.description}}</p>
+	</div>
+
+	<hr>
+
+	{% endfor %}
+
+
+
+	</div>
+
+
+{% endblock %}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel=stylesheet href="{{ url_for('static', filename='bootstrap.css') }}">
+	<link rel=stylesheet href="{{ url_for('static', filename='style.css') }}">
+	</head>
+
+<body>
+
+
+<div class=".navbar-fixed-left">
+		<div class = "border-right">
+		</div>
+</div>
+
+<div class="main">
+
+<h1> Add Item for Catalog {{active_catalog[0].name}} </h1>
+
+ {% from "macros.html" import with_errors with context %}
+
+
+<div class = 'flash'>
+	{% with messages = get_flashed_messages() %}
+      {% if messages %}
+
+        <ul>
+        {% for message in messages %}
+            <li> <strong> {{ message }} </strong> </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+</div>
+
+<form method = "POST" >
+<fieldset>
+          {{ form.csrf_token }}
+            <div style = font-size:20px; font-weight:bold; margin-left:150px;>
+            	<h4> Item Name </h4>
+               	{{ with_errors(form.name, style='font-weight: bold') }}
+				<br>
+				<br>
+				<hr>
+				<h4> Item Description </h4>
+
+				{{ with_errors(form.description, style='font-weight: bold') }}
+               <br>
+               <br>
+               <br>
+               {{ form.submit }}
+            </div>
+</fieldset>
+</form>
+
+
+
+	<!-- Adapted from demo project in class. Flashed messages -->
+		<div class = 'flash'>
+			{% with messages = get_flashed_messages() %}
+		      {% if messages %}
+
+		        <ul>
+		        {% for message in messages %}
+		            <li> <strong> {{ message }} </strong> </li>
+		        {% endfor %}
+		        </ul>
+		        {% endif %}
+		    {% endwith %}
+
+		</div>
+
+	<hr>
+
+
+</div>
+</div>
+</div>
+</body>
+</html>

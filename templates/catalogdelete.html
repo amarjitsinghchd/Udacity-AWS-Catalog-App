@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "header.html" %}
+	<div class = "row justify-content-sm-\enter" >
+		<h1>Project Catalog</h1>
+	</div>
+
+	<!-- Side navigation -->
+	<div class=".navbar-fixed-left">
+		<div class = "border-right">
+		</div>
+	</div>
+
+	<!-- Page content -->
+	<div class="main">
+		<div class = 'pane'>
+			<div class = 'header'>
+			{% for icat in catalogs %}
+				{% if icat.delete_allowed > 0 %}
+				<br>
+				<class ="main">{{ icat.name }} </class>
+				<br>
+				<a href= "{{url_for('edit_catalog', catalog_id = icat.id)}}" > Edit</a>
+				<br>
+				<a href= "{{url_for('delete_catalog', catalog_id = icat.id)}}" > Delete</a>
+				{% else %}
+				<br>
+				<p>{{ icat.name }} Delete not Allowed</p>
+				{% endif %}
+				<br>
+			{% endfor %}
+			</div>
+		</div>
+	</div>
+
+	<!-- Adapted from demo project in class. Flashed messages -->
+		<div class = 'flash'>
+			{% with messages = get_flashed_messages() %}
+		      {% if messages %}
+
+		        <ul>
+		        {% for message in messages %}
+		            <li> <strong> {{ message }} </strong> </li>
+		        {% endfor %}
+		        </ul>
+		        {% endif %}
+		    {% endwith %}
+
+		</div>
+
+	<hr>
+
+
+{% endblock %}
