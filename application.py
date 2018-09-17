@@ -46,9 +46,9 @@ session = DBSession()
 @app.route('/login')
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-                    for x in xrange(32))
+                    for x in range(32))
     login_session['state'] = state
-    print "statedr log in with state as %s", state
+    print("statedr log in with state as %s", state)
     return render_template('login.html', STATE=state)
     
 
@@ -105,7 +105,7 @@ def gconnect():
   # Verify that the access token is valid for this app.
   if result['issued_to'] != CLIENT_ID:
     response = make_response(json.dumps("Token's client ID does not match app's."), 401)
-    print "Token's client ID does not match app's."
+    print("Token's client ID does not match app's.")
     response.headers['Content-Type'] = 'application/json'
     return response
 
@@ -148,7 +148,7 @@ def gconnect():
   output += login_session['picture']
   output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
   flash("you are now logged in as %s" % login_session['username'])
-  print "done!"
+  print("done!")
   return output
 
 
@@ -273,7 +273,7 @@ def fbconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     access_token = request.data
-    print "access token received %s " % access_token
+    print("access token received %s " % access_token)
 
 
     app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
@@ -571,6 +571,6 @@ def catalogsJSON():
 
 
 if __name__ == '__main__':
-	app.debug = True
-	app.run(host = '0.0.0.0', port = 5000)
- 
+	#app.debug = True
+	app.run()
+

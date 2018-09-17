@@ -90,8 +90,8 @@ if __name__ == '__main__':
     items = session.query(CatalogItems).filter_by(catalog_id=1).all()
 
     for icat in mycatalog:
-        print icat.id, icat.name
+        print(( icat.id, icat.name))
     
     for i in items:
-        print i.id, i.name
+        print((i.id, i.name))
 

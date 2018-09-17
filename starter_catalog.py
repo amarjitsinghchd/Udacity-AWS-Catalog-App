@@ -23,8 +23,8 @@ user = [{'name': 'A Singh', 'email': 'aswchd@gmail.com', 'picture': 'https://lh3
 
 if __name__ == '__main__':
 	for icatalog in catalog:
-		print 'NAME:', icatalog['name']
-		print 'id:', icatalog['id']
+		print('NAME:', icatalog['name'])
+		print('id:', icatalog['id'])
 	
 	for iuser in user:	
-		print 'user name:', iuser['name']
+		print('user name:', iuser['name'])

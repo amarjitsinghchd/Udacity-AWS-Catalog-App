@@ -17,12 +17,12 @@ class AddItemFormTest(FlaskForm):
 
 
 class AddItemForm(FlaskForm):
-    item_id = HiddenField(u'item_id')
-    name = TextField(u'name', validators=[DataRequired()])
-    description = TextAreaField(u'description', validators=[DataRequired()])
-    submit = SubmitField(u'Add/Edit Item')
+    item_id = HiddenField('item_id')
+    name = TextField('name', validators=[DataRequired()])
+    description = TextAreaField('description', validators=[DataRequired()])
+    submit = SubmitField('Add/Edit Item')
 
 class AddCatalogForm(FlaskForm):
-    item_id = HiddenField(u'item_id')
+    item_id = HiddenField('item_id')
     name = TextField('name', validators=[DataRequired()])
     submit = SubmitField('Add/Edit Item')
