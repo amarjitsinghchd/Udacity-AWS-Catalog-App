@@ -1,16 +1,20 @@
 import os
 import sys
+import psycopg2
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker, query
 from sqlalchemy import create_engine
-from starter_catalog import catalog, catalog_items, user
+from starter_catalog import catalog, catalog_items, userlist
 
 Base = declarative_base()
 
+POSTGRESQL_ENGINE = 'postgresql://catalog:punch3651@localhost:5433/catalog'
+
+
 # for storing users for this application
-class User(Base):
-    __tablename__ = 'user'
+class CatalogUser(Base):
+    __tablename__ = 'catalogusers'
 
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
@@ -26,8 +30,8 @@ class Catalog(Base):
     delete_allowed = Column(Integer)
     items = relationship("CatalogItems", back_populates='catalog',
         cascade="all, delete, delete-orphan")
-    user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User)
+    user_id = Column(Integer, ForeignKey('catalogusers.id'))
+    catalogusers = relationship(CatalogUser)
 
     @property
     def serialize(self):
@@ -58,18 +62,18 @@ class CatalogItems(Base):
         }
 
 
-engine = create_engine('sqlite:///catalog.db')   
-Base.metadata.create_all(engine)
+#engine = create_engine('sqlite:///catalog.db')   
+#Base.metadata.create_all(engine)
 
 if __name__ == '__main__':
-    engine = create_engine('sqlite:///catalog.db')
+    engine = create_engine(POSTGRESQL_ENGINE)
     Base.metadata.create_all(engine)
     Base.metadata.bind = engine
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
 
-    for iuser in user:
-        usertemp = User(name = iuser['name'], email = iuser['email'], picture = iuser['picture'])
+    for iuser in userlist:
+        usertemp = CatalogUser(name = iuser['name'], email = iuser['email'], picture = iuser['picture'])
         session.add(usertemp)
     session.commit()
 

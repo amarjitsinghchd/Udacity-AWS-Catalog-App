@@ -17,7 +17,7 @@ the game', 'catalog_id': '2'}]
 
 catalog_items = [catalog_item1, catalog_item2]
 
-user = [{'name': 'A Singh', 'email': 'aswchd@gmail.com', 'picture': 'https://lh3.googleusercontent.com/-Z_ibn6llwdE/AAAAAAAAAAI/AAAAAAAAAeA/diI-FlrpBC0/photo.jpg'}, 
+userlist = [{'name': 'A Singh', 'email': 'aswchd@gmail.com', 'picture': 'https://lh3.googleusercontent.com/-Z_ibn6llwdE/AAAAAAAAAAI/AAAAAAAAAeA/diI-FlrpBC0/photo.jpg'}, 
 {'name': 'Amarjit', 'email': 'amarjit_71@hotmail.com', 'picture': 'https://lh3.googleusercontent.com/-Z_ibn6llwdE/AAAAAAAAAAI/AAAAAAAAAeA/diI-FlrpBC0/photo.jpg'}]
 
 
@@ -26,5 +26,5 @@ if __name__ == '__main__':
 		print('NAME:', icatalog['name'])
 		print('id:', icatalog['id'])
 	
-	for iuser in user:	
+	for iuser in userlist:	
 		print('user name:', iuser['name'])

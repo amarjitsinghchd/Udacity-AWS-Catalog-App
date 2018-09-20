@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Catalog, CatalogItems, User
+from database_setup import Base, Catalog, CatalogItems,CatalogUser, POSTGRESQL_ENGINE
 from forms import AddItemForm, AddCatalogForm
 import requests
 
@@ -37,10 +37,10 @@ CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Restaurant Menu App"
 
-engine = create_engine('sqlite:///catalog.db', echo = True)
+engine = create_engine(POSTGRESQL_ENGINE, echo = True)
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
-session = DBSession()
+#session = DBSession()
 
 # Create anti-forgery state token
 @app.route('/login')
@@ -174,27 +174,35 @@ def gdisconnect():
 
 @app.route('/')
 def catalog_main():
+  session = DBSession()
   catalogs = session.query(Catalog).all()
   catalog_id = catalogs[0].id
   items = session.query(CatalogItems).filter_by(catalog_id=catalog_id).all()
   active_catalog = session.query(Catalog).filter_by(id = catalog_id).all()
-  creator = getUserInfo(catalogs[0].user_id)
+  creator = getUserInfo(catalog_id)
+  user_logged = False
+  user_edit = False
   if 'username' not in login_session:
     user_logged = False
     user_edit = False
   elif creator.id != login_session['user_id']:
     user_logged = True
     user_edit = False
-  else:
+  elif creator.id == login_session['user_id']:
     user_logged = True
     user_edit = True
-  
+  else:
+    user_logged = False
+    user_edit = False
+	
+  session.close()
   return render_template('main.html', catalogs=catalogs, items=items,catalog_id = catalog_id, 
     active_catalog=active_catalog, user_logged = user_logged, user_edit = user_edit)
   
 @app.route('/catalog/<int:catalog_id>')
 def catalog_select(catalog_id):
 	# catalogs = session.query(Catalog).filter_by(id = catalog_id).one()
+  session = DBSession()
   catalogs = session.query(Catalog).all()
   items = session.query(CatalogItems).filter_by(catalog_id=catalog_id).all()
   active_catalog = session.query(Catalog).filter_by(id = catalog_id).all()
@@ -209,6 +217,8 @@ def catalog_select(catalog_id):
   else:
     user_logged = True
     user_edit = True
+  
+  session.close()
   return render_template('main.html', catalogs=catalogs, items=items,catalog_id = catalog_id, active_catalog=active_catalog, user_logged = user_logged, user_edit = user_edit)
 
 @app.route('/catalog/deleteMenu')
@@ -216,13 +226,14 @@ def delete_catalogmenu():
   
   if 'username' not in login_session:
     return redirect(url_for('showLogin'))
-  
+  session = DBSession()
   catalogs = session.query(Catalog).all()
   for icatalog in catalogs:
     if icatalog.user_id == login_session['user_id']:
       icatalog.delete_allowed = 1
     else:
       icatalog.delete_allowed = 0
+  session.close()
   return render_template('catalogdelete.html', catalogs = catalogs)
    
 
@@ -231,6 +242,7 @@ def delete_catalogmenu():
 def delete_catalog(catalog_id):
    # catalogs = session.query(Catalog).filter_by(id = catalog_id).one()
 
+  session = DBSession()
   catalogtodelete = session.query(Catalog).filter_by(id=catalog_id).one()
   if 'username' not in login_session:
     return redirect(url_for('showLogin'))
@@ -243,13 +255,14 @@ def delete_catalog(catalog_id):
   except:
     session.rollback()
   finally:
+    session.close()
     return redirect(url_for('catalog_main'))
-      #session.close()
 
 @app.route('/delete/<int:catalog_id>/<int:item_id>/')
 def delete_item(catalog_id, item_id):
    # catalogs = session.query(Catalog).filter_by(id = catalog_id).one()
 
+  session = DBSession()
   catalogtodelete = session.query(Catalog).filter_by(id=catalog_id).one()
   if 'username' not in login_session:
     return redirect(url_for('showLogin'))
@@ -257,11 +270,12 @@ def delete_item(catalog_id, item_id):
     return "<script>function myFunction() {alert('You are not authorized to delete this catalog. Please create your own catalog in order to delete.');}</script><body onload='myFunction()'>"
 
   try:
-    items = session.query(CatalogItems).filter_by(id=item_id).delete(synchronize_session=False)
+    session.query(CatalogItems).filter_by(id=item_id).delete(synchronize_session=False)
     session.commit()
   except:
     session.rollback()
   finally:
+    session.close()
     return redirect(url_for('catalog_select', catalog_id = catalog_id))
       #session.close()
 
@@ -284,6 +298,8 @@ def fbconnect():
         app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
+    
+    print(result)
 
 
     # Use token to get user info from API
@@ -381,19 +397,20 @@ def add_catalog():
     return redirect(url_for('showLogin'))
   
   form = AddCatalogForm()
-
-
+  
   if form.validate_on_submit():
       #print "form ok"
       #print form.name.data
       #print form.description.data
 #      temp = CatalogItems(name = form.name, description = form.description,
  #        catalog_id = catalog_id)
+      session = DBSession()
       temp = Catalog(name = form.name.data, user_id = login_session['user_id'])
       session.add(temp)
       session.commit()
       current_catalog = session.query(Catalog).filter_by(name= form.name.data).all()
       catalog_id = current_catalog[0].id
+      session.close()
       # print "item saved"
       return redirect(url_for('catalog_select', catalog_id = catalog_id))
       #return render_template('additemsuccess.html')
@@ -403,13 +420,14 @@ def add_catalog():
    
       #session.close()
 
-  catalogs = session.query(Catalog).all()
-  items = session.query(CatalogItems).filter_by(catalog_id=catalog_id).all()
-  return render_template('main.html', catalogs=catalogs,items=items,catalog_id = catalog_id, active_catalog=active_catalog)
+  #catalogs = session.query(Catalog).all()
+  #items = session.query(CatalogItems).filter_by(catalog_id=catalog_id).all()
+ # return render_template('main.html', catalogs=catalogs,items=items,catalog_id = catalog_id, active_catalog=active_catalog)
 
 @app.route('/editcatalog/<int:catalog_id>/', methods=['GET', 'POST'])
 def edit_catalog(catalog_id):
 
+  session = DBSession()
   active_catalog = session.query(Catalog).filter_by(id = catalog_id).all()
    
   if 'username' not in login_session:
@@ -427,9 +445,10 @@ def edit_catalog(catalog_id):
       session.commit()
       flash('Item Successfully Edited')
     except:
-      session.rollback
+      session.rollback()
       flash('Item edit Aborted')
-    
+    finally:
+      session.close()
     return redirect(url_for('catalog_select', catalog_id = catalog_id))
   else:
     return render_template('addcatalog.html', form = form)
@@ -438,12 +457,15 @@ def edit_catalog(catalog_id):
 @app.route('/additem/<int:catalog_id>/', methods = ['GET', 'POST'])
 def add_item(catalog_id):
    # catalogs = session.query(Catalog).filter_by(id = catalog_id).one()
+  session =  DBSession()
   active_catalog = session.query(Catalog).filter_by(id = catalog_id).all()
    
   if 'username' not in login_session:
+    session.close()
     return redirect(url_for('showLogin'))
 
   if active_catalog[0].user_id != login_session['user_id']:
+    session.close()
     return "<script>function myFunction() {alert('You are not authorized to add item to this catalog. Please create your own catalog in order to add.');}</script><body onload='myFunction()'>"
 
   
@@ -468,12 +490,13 @@ def add_item(catalog_id):
    
       #session.close()
 
-  catalogs = session.query(Catalog).all()
-  items = session.query(CatalogItems).filter_by(catalog_id=catalog_id).all()
-  return render_template('main.html', catalogs=catalogs,items=items,catalog_id = catalog_id, active_catalog=active_catalog)
+ # catalogs = session.query(Catalog).all()
+ # items = session.query(CatalogItems).filter_by(catalog_id=catalog_id).all()
+ # return render_template('main.html', catalogs=catalogs,items=items,catalog_id = catalog_id, active_catalog=active_catalog)
 
 @app.route('/edititem/<int:catalog_id>/menu/<int:item_id>/', methods=['GET', 'POST'])
 def edit_item(catalog_id, item_id):
+  session = DBSession()
   active_catalog = session.query(Catalog).filter_by(id = catalog_id).all()
    
   if 'username' not in login_session:
@@ -508,7 +531,8 @@ def edit_item(catalog_id, item_id):
 # User Helper functions
 
 def createUser():
-    newUser = User(name=login_session['username'], email=login_session[
+    session = DBSession()
+    newUser = CatalogUser(name=login_session['username'], email=login_session[
                    'email'], picture=login_session['picture'])
     session.add(newUser)
     session.commit()
@@ -517,13 +541,20 @@ def createUser():
 
 
 def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
-    return user
+    try:
+       session = DBSession()
+       user = session.query(CatalogUser).filter_by(id=user_id).one()
+       session.close()
+       return user
+    except:
+       return None
 
 
 def getUserID(email):
     try:
-        user = session.query(User).filter_by(email=email).one()
+        session = DBSession()
+        user = session.query(CatalogUser).filter_by(email=email).one()
+        session.close()
         return user.id
     except:
         return None
@@ -534,6 +565,7 @@ def getUserID(email):
 @app.route('/catalog/<int:catalog_id>/JSON')
 @app.route('/catalog/<int:catalog_id>/json')
 def catalogitemsJSON(catalog_id):
+  session = DBSession()
   items = session.query(CatalogItems).filter_by(catalog_id=catalog_id).all()
   return jsonify(CatalogItems=[i.serialize for i in items])
 
@@ -541,6 +573,7 @@ def catalogitemsJSON(catalog_id):
 @app.route('/catalog/<catalog_name>/JSON')
 @app.route('/catalog/<catalog_name>/json')
 def catalogitemnameJSON(catalog_name):
+  session =  DBSession()
   catalog = session.query(Catalog).filter(func.lower(Catalog.name)==func.lower(catalog_name)).one()
   catalog_id = catalog.id
   items = session.query(CatalogItems).filter_by(catalog_id=catalog_id).all()
@@ -549,6 +582,7 @@ def catalogitemnameJSON(catalog_name):
 @app.route('/catalog/<int:catalog_id>/<int:item_id>/JSON')
 @app.route('/catalog/<int:catalog_id>/<int:item_id>/json')
 def catalogItemJSON(catalog_id, item_id):
+  session = DBSession()
   items = session.query(CatalogItems).filter_by(catalog_id=catalog_id, id = item_id).all()
   return jsonify(CatalogItems=[i.serialize for i in items])
 
@@ -557,6 +591,7 @@ def catalogItemJSON(catalog_id, item_id):
 def catalogItemnameJSON(catalog_name, item_name):
   catalog_name = catalog_name.lower()
   item_name = item_name.lower()
+  session = DBSession()
   catalog = session.query(Catalog).filter(func.lower(Catalog.name)==catalog_name).one()
   catalog_id = catalog.id
   items = session.query(CatalogItems).filter((CatalogItems.catalog_id==catalog_id) & (func.lower(CatalogItems.name) == item_name)).all()
@@ -566,6 +601,7 @@ def catalogItemnameJSON(catalog_name, item_name):
 @app.route('/catalogs/JSON')
 @app.route('/catalogs/json')
 def catalogsJSON():
+    session = DBSession()
     catalogs = session.query(Catalog).all()
     return jsonify(catalogs=[r.serialize for r in catalogs])
 
